@@ -47,15 +47,28 @@ export class ServiceSchedule {
         return null;
       }
 
+      //Verify if any group related is occupied in this interval
+
+      const verifyGroup = await reposotiry.findAssignedScheduleByGroups(new ObjectId(schedule.group), hourInterval, schedule.day);
+      console.log(schedule.group)
+      console.log(hourInterval)
+      console.log(schedule.day)
+      console.log(verifyGroup);
+      if (verifyGroup.length > 0) {
+        return null;
+      }
+      
+      //Verify if theacher is available 
       const tempCourseDegreeGroup = await repositoryCourseDegreeGroup.findOne(courseDegreeGroup);
       const tempHourInterval = await repositoryHourInterval.findOne(hourInterval);
-      console.log(tempCourseDegreeGroup);
+      
       const tempTeacher = await repositoryTeacher.findManyTeachers(tempCourseDegreeGroup.teachers)
       let validatorHour = false;
       for (let teacher of tempTeacher) {
         teacher.busyDays.forEach((day) => {
-          if (day.start ===  tempHourInterval.start && day.end === tempHourInterval.end) {
+          if (day.day === schedule.day && day.start ===  tempHourInterval.start && day.end === tempHourInterval.end) {
             console.log('Hour not valid');
+            console.log(teacher)
             validatorHour = true;
           }
         });

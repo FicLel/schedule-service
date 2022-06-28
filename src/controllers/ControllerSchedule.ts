@@ -23,11 +23,12 @@ export class ControllerSchedule {
     else res.status(404).send('Schedule not Found, cannont update');
   }
   
-  async deleteSchedule(req: Request, res: Response) {
+  async deleteSchedule(req: Request, res: Response, next: NextFunction) {
     const id: string = req.params.id;
     const response = await new ServiceSchedule().delete(id);
     if (response) res.status(200).json({message: 'Schedule deleted succesfully'});
     else res.status(404).send('Schedule not Found');
+    next();
   }
 
   async findSchedules(req: Request, res: Response) {
@@ -90,11 +91,12 @@ export default async (router: Router, io: any) =>  {
   router.get('/schedule/teacher/:id', controller.getScheduleByTeacher);
   router.get('/schedule/group/:id', controller.getScheduleByGroup);
   router.get('/schedule/assigned/(:course)*', controller.getAsssignedSchedule);
-  router.delete('/schedule/:id', controller.deleteSchedule, async (req: Request, res: Response) => {
+  router.delete('/schedule/:id/group/:group', controller.deleteSchedule, async (req: Request, res: Response) => {
     console.log('Schedule Deleted');
-    console.log(req.body.group);
-    io.sockets.in(req.body.group).emit('message', await controller.getScheduleByGroupSocket(req.body.group));
+    console.log(req.params.group);
+    io.sockets.in(req.params.group).emit('message', await controller.getScheduleByGroupSocket(req.params.group));
   });
+  router.delete('/schedule/:id', controller.deleteSchedule);
   router.get('/schedule', controller.findSchedules);
   router.get('/schedule/:id', controller.findSchedule);
 }

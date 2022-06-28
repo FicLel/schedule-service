@@ -43,7 +43,7 @@ export class RepositorySchedule extends BaseRepository<Schedule> {
         {day: day}
       ]
     });
-    console.log(data);
+   
     return data;
   }
 
@@ -64,6 +64,27 @@ export class RepositorySchedule extends BaseRepository<Schedule> {
   ]).toArray();
   return data;
  }
+ async findAssignedScheduleByGroups(id: ObjectId, interval: ObjectId, day: number): Promise<Document[]> {
+  const data = await this._collection.aggregate([
+   {
+       '$lookup': {
+           'from': 'CourseDegreeGroup',
+           "foreignField": '_id',
+           'localField': 'courseDegreeGroup',
+           'as': 'group'
+       },
+   },{
+       '$match': {
+         '$and': [
+            {'group.group': {$in: [id]}},
+            {'hourInterval': interval},
+            {'day': day}
+          ]
+       },
+   }
+ ]).toArray();
+ return data;
+}
  async findAssignedScheduleByTeachers(id: ObjectId[]): Promise<Document[]> {
   const data = await this._collection.aggregate([
    {
