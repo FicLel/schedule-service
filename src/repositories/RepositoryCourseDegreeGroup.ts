@@ -7,5 +7,8 @@ export class RepositoryCourseDegreeGroup extends BaseRepository<CourseDegreeGrou
     const data = await this._collection.find({'group': {'$in': [id]}}).toArray();
     return data;
   }
-  
+  async getCourseByTeacher(id: ObjectId): Promise<WithId<Document>[]> {
+    const data = await this._collection.find({'teachers': {'$in': [id]}}).toArray();
+    return data;
+  }
 }

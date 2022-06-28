@@ -48,15 +48,18 @@ export class ServiceSchedule {
       }
 
       //Verify if any group related is occupied in this interval
-
-      const verifyGroup = await reposotiry.findAssignedScheduleByGroups(new ObjectId(schedule.group), hourInterval, schedule.day);
-      console.log(schedule.group)
-      console.log(hourInterval)
-      console.log(schedule.day)
-      console.log(verifyGroup);
-      if (verifyGroup.length > 0) {
-        return null;
+      const degreeGroups = await repositoryCourseDegreeGroup.getCourseByGroup(new ObjectId(schedule.group));
+      let validatorGroups = false;
+      for await (let degree of degreeGroups) {
+        for await (let groupD of degree.group) {
+          const verifyGroup = await reposotiry.findAssignedScheduleByGroups(new ObjectId(groupD), hourInterval, schedule.day);
+          if (verifyGroup.length > 0) {
+            validatorGroups = true;
+            break;
+          }
+        }    
       }
+      if (validatorGroups) return null; 
       
       //Verify if theacher is available 
       const tempCourseDegreeGroup = await repositoryCourseDegreeGroup.findOne(courseDegreeGroup);
@@ -74,7 +77,24 @@ export class ServiceSchedule {
         });
       }
       if (validatorHour) return null;
-      
+
+      // Verify assigned hour by teacher
+
+      const degreeTeachers = await repositoryCourseDegreeGroup.getCourseByTeacher(new ObjectId(tempCourseDegreeGroup.teachers[0]));
+      let validatorTeachers = false;
+      for await (let degree of degreeTeachers) {
+        for await (let groupD of degree.teachers) {
+          const verifyGroup = await reposotiry.findAssignedScheduleByTeacherOnInterval(new ObjectId(groupD), hourInterval, schedule.day);
+          if (verifyGroup.length > 0) {
+            validatorTeachers = true;
+            break;
+          }
+        }    
+      }
+      if (validatorTeachers) return null;
+
+
+      // Assigned Variables
       const tempSchedule: Schedule = new Schedule(courseDegreeGroup, room, schoolYear, hourInterval, schedule.day);
       const id: ObjectId = await reposotiry.create(tempSchedule);
       
