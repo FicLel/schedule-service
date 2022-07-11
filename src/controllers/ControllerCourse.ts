@@ -33,6 +33,8 @@ class ControllerCourse {
     else res.status(404).send('Course not Found');
   }
 
+  
+
 }; 
 
 export default async (router: Router) =>  {

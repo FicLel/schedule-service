@@ -53,6 +53,14 @@ class ControllerGroup {
     }
   }
 
+  async getGroupsToAssign() {
+
+  }
+
+  async getAssignedGroups() {
+    
+  }
+
 }; 
 
 export default async (router: Router) =>  {

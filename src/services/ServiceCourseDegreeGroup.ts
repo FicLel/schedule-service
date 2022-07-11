@@ -10,6 +10,7 @@ import { Course } from '../models/Course';
 import { Group } from '../models/Group';
 import { Teacher } from '../models/Teacher';
 import { RepositoryGroup } from '../repositories/RepositoryGroup';
+import { transformmMinutesToHours } from '../config/minutes-converter';
 
 export class ServiceCourseDegreeGroup {
 
@@ -121,7 +122,7 @@ export class ServiceCourseDegreeGroup {
       let tempTeachersObject: Teacher;
       tempTeachers.forEach((teacher) => {
         tempTeachersObject = new Teacher(teacher?.name, teacher?.busyDays, teacher?._id);
-        tempTeachersObject.changeHoursFromBusyDays(this.transformmMinutesToHours);
+        tempTeachersObject.changeHoursFromBusyDays(transformmMinutesToHours);
         tempTeachersArray.push(tempTeachersObject);
       }) 
       tempContainer.setTeachers(tempTeachersArray);
@@ -140,6 +141,41 @@ export class ServiceCourseDegreeGroup {
     const repositoryGroup: RepositoryGroup = new RepositoryGroup(db, 'Group');
     
     const response = await repository.findOne(tempObject);
+    if (!response?._id || response?.id === null) {
+      return null;
+    }
+    const tempContainer = new CourseDegreeGroup(response?.course, response?.group, response?.teaches, response?._id)
+    const tempCourse = await repositoryCourse.findOne(response?.course);
+    tempContainer.setCourse(new Course(tempCourse?.name, tempCourse?.code, tempCourse?.hours, tempCourse?._id));
+    
+    const tempGroupResponse = await repositoryGroup.findManyGroup(response?.group);
+    const tempGroup: Group[] = [];
+    tempGroupResponse.forEach((g) => {
+      tempGroup.push(new Group(g?.code, g?.quantity, g?.degree, g?.father, g?._id));
+    }) 
+    tempContainer.setGroup(tempGroup);
+
+    const tempTeachers = await repositoryTeacher.findManyTeachers(response?.teachers);
+    const tempTeachersArray: Teacher[] = [];
+    tempTeachers.forEach((teacher) => {
+      tempTeachersArray.push(new Teacher(teacher?.name, teacher?.busyDays, teacher?._id));
+    }) 
+
+    tempContainer.setTeachers(tempTeachersArray);
+    
+    return tempContainer;
+  }
+
+  async findByCourse(id: string): Promise<CourseDegreeGroup> {
+    const tempObject: ObjectId = new ObjectId(id);
+    
+    const db: Db  = (await DbInstance.getInstance(DB_CREDENTIALS)).db;
+    const repositoryTeacher: RepositoryTeacher = new RepositoryTeacher(db, 'Teacher');
+    const repository: RepositoryCourseDegreeGroup = new RepositoryCourseDegreeGroup(db, 'CourseDegreeGroup');
+    const repositoryCourse: RepositoryCourse = new RepositoryCourse(db, 'Course');
+    const repositoryGroup: RepositoryGroup = new RepositoryGroup(db, 'Group');
+    
+    const response = await repository.getDegreeGroupByCouse(tempObject);
     if (!response?._id || response?.id === null) {
       return null;
     }
@@ -193,7 +229,7 @@ export class ServiceCourseDegreeGroup {
       let tempTeachersObject: Teacher;
       tempTeachers.forEach((teacher) => {
         tempTeachersObject = new Teacher(teacher?.name, teacher?.busyDays, teacher?._id);
-        tempTeachersObject.changeHoursFromBusyDays(this.transformmMinutesToHours);
+        tempTeachersObject.changeHoursFromBusyDays(transformmMinutesToHours);
         tempTeachersArray.push(tempTeachersObject);
       }) 
       tempContainer.setTeachers(tempTeachersArray);
@@ -202,18 +238,6 @@ export class ServiceCourseDegreeGroup {
     return tempCourseDegreeGroup;
   }
 
-  transformmMinutesToHours(time: number): string {
-    
-    const tempHours: number  = time / 60;
-    const tempMinutes: number = time % 60;
-     
-    const hours: number = parseInt(tempHours.toString(), 10);
-    const minutes: number = parseInt(tempMinutes.toString(), 10);
-    if (hours < 0 || hours > 23 || minutes > 59 || minutes < 0) {
-      return 'Hora invalida';
-    } 
-  
-    return ''+hours+':'+minutes;
-  };
+
 
 }

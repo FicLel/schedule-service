@@ -42,13 +42,20 @@ class ControllerCourseDegreeGroup {
   async findDegreeGroup(req: Request, res: Response) {
     const id: string = req.params.id;
     const response = await new ServiceCourseDegreeGroup().findOne(id);
-   if (response)  res.status(200).json(response);
+    if (response)  res.status(200).json(response);
     else res.status(404).send('DegreeGroup not Found');
   }
 
   async findCourseByGroup(req: Request, res: Response) {
     const id: string = req.params.id;
     const response = await new ServiceCourseDegreeGroup().getByGroup(id);
+    if (response)  res.status(200).json(response);
+    else res.status(404).send('DegreeGroup not Found');
+  }
+
+  async findDegreeGroupByCourse(req: Request, res: Response) {
+    const id: string = req.params.id;
+    const response = await new ServiceCourseDegreeGroup().findByCourse(id);
     if (response)  res.status(200).json(response);
     else res.status(404).send('DegreeGroup not Found');
   }
