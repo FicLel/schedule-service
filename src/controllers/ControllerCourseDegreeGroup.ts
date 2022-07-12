@@ -54,10 +54,14 @@ class ControllerCourseDegreeGroup {
   }
 
   async findDegreeGroupByCourse(req: Request, res: Response) {
-    const id: string = req.params.id;
-    const response = await new ServiceCourseDegreeGroup().findByCourse(id);
-    if (response)  res.status(200).json(response);
-    else res.status(404).send('DegreeGroup not Found');
+    try {
+      const id: string = req.params.id;
+      const response = await new ServiceCourseDegreeGroup().findByCourse(id);
+      if (response)  res.status(200).json(response);
+      else res.status(404).send('DegreeGroup not Found');
+    } catch (exception) {
+      res.status(500).send({msg: 'Something bad happend from our side', error: `${exception}`})
+    }
   }
 
 }; 
@@ -69,6 +73,7 @@ export default async (router: Router) =>  {
   router.put('/coursedegreegroup/:id', controller.updateDegreeGroup);
   router.delete('/coursedegreegroup/:id', controller.deleteDegreeGroup);
   router.get('/coursedegreegroup', controller.findDegreeGroups);
+  router.get('/coursedegreegroup/course/:id', controller.findDegreeGroupByCourse);
   router.get('/coursedegreegroup/group/:id', controller.findCourseByGroup);
   router.get('/coursedegreegroup/:id', controller.findDegreeGroup);
 }
